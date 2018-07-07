@@ -1,0 +1,23 @@
+{
+  "name": "eos_ram_price_bot",
+  "version": "1.0.0",
+  "description": "eos ram price notification bot",
+  "main": "pricebot.js.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/freebsdk/eos_ram_price_bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/freebsdk/eos_ram_price_bot/issues"
+  },
+  "homepage": "https://github.com/freebsdk/eos_ram_price_bot#readme",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.30.0",
+    "request": "^2.87.0"
+  }
+}
