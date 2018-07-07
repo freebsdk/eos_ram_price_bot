@@ -1,3 +1,5 @@
+import { listenerCount } from 'cluster';
+
 const request = require('request');
 const TelegramBot = require('node-telegram-bot-api');
 
@@ -86,9 +88,14 @@ var onList = () => {
 
 	var send_msg = "< Alarm price List >\n";
 
-	alarm_list.sort();
-	for(var i=0; i<alarm_list.length; i++) {
-		send_msg += "["+i+"] "+alarm_list[i]+"\n";
+	if(alarm_list.length == 0)  {
+		send_msg += "No alarms are registered.";
+	}
+	else {
+		alarm_list.sort();
+		for(var i=0; i<alarm_list.length; i++) {
+			send_msg += "["+i+"] "+alarm_list[i]+"\n";
+		}	
 	}
 
 	sendMsg(send_msg);
