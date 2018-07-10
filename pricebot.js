@@ -41,7 +41,7 @@ var checkPrice = () => {
 
 	if(cur_ram_price == 0.0) return;
 
-    var check_price = (Math.floor(cur_ram_price * 10))/10;
+    var check_price = (Math.floor(cur_ram_price * 100))/100;
     //console.log("check_price : "+check_price);
 
     //check alarm prices
