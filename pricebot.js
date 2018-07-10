@@ -147,7 +147,6 @@ var initTelegram = (telegram_token) => {
 	bot.on('message', msg => {
     	chat_id = msg.chat.id;
 		token = msg.text.split(' ');
-		console.log(token[0]);
 
     	switch(token[0]) {
 			case "pr": 
@@ -202,13 +201,13 @@ var getCurPrice = () => {
             var last_price_list = JSON.parse(body.substring(1, body.length-1));
         }
         catch(ex) {
-			console.log("error : "+ex.message+":"+body);
+			console.error("error : "+ex.message+":"+body);
             return;
         }
 
 		cur_ram_price = Number(last_price_list[last_price_list.length-1][1]);
 		last_update_utc = new Date().getTime();
-		console.log(cur_ram_price);
+		//console.log(cur_ram_price);
     });
 }
 
