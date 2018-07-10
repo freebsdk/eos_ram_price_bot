@@ -61,7 +61,12 @@ var checkPrice = () => {
 
 
 var onPrice = () => {
-	sendMsg("Current ram price is "+cur_ram_price);
+	if(cur_ram_price == 0)  {
+		sendMsg("Not yet received price data.");
+	}
+	else {
+		sendMsg("Current ram price is "+cur_ram_price);
+	}
 }
 
 
