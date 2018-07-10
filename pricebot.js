@@ -71,7 +71,7 @@ var onPrice = () => {
 	}
 	else {
 		var dt = new Date(last_update_utc);
-		sendMsg("Current ram price is "+cur_ram_price+" (updated on "+dt.getMinutes()+"m "+dt.getSeconds()+")");
+		sendMsg("Current ram price is "+cur_ram_price+" (updated on "+dt.getMinutes()+":"+dt.getSeconds()+")");
 	}
 }
 
