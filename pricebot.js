@@ -1,3 +1,4 @@
+const console_stamp = require('console-stamp')(console, 'yyyy-mm-dd HH:MM:ss.l');
 const request = require('request');
 const fs = require('fs');
 const TelegramBot = require('node-telegram-bot-api');
@@ -5,6 +6,7 @@ const TelegramBot = require('node-telegram-bot-api');
 
 var bot = null;
 var cur_ram_price = 0.0;
+var last_update_utc = 0;
 var chat_id = 0;
 var alarm_list = [];
 var SAVE_FILE_NAME = "./alarm_list.txt";
@@ -61,11 +63,13 @@ var checkPrice = () => {
 
 
 var onPrice = () => {
+	var cur_utc = new Date().getTime();
+
 	if(cur_ram_price == 0)  {
 		sendMsg("Not yet received ram price data.");
 	}
 	else {
-		sendMsg("Current ram price is "+cur_ram_price);
+		sendMsg("Current ram price is "+cur_ram_price+" ("+cur_utc-last_update_utc+" sec before)");
 	}
 }
 
@@ -201,6 +205,7 @@ var getCurPrice = () => {
         }
 
 		cur_ram_price = Number(last_price_list[last_price_list.length-1][1]);
+		last_update_utc = new Date().getTime();
 		console.log(cur_ram_price);
     });
 }

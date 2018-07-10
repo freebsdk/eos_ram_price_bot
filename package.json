@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/freebsdk/eos_ram_price_bot#readme",
   "dependencies": {
+    "console-stamp": "^0.2.6",
     "node-telegram-bot-api": "^0.30.0",
     "request": "^2.87.0"
   }
