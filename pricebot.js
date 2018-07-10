@@ -71,7 +71,7 @@ var onPrice = () => {
 	}
 	else {
 		var elapsed_sec = Math.floor((cur_utc-last_update_utc)/1000);
-		sendMsg("Current ram price is "+cur_ram_price+" ("+elapsed_sec+" sec)");
+		sendMsg("Current ram price is "+cur_ram_price+" ("+elapsed_sec+" secs before)");
 	}
 }
 
@@ -102,7 +102,7 @@ var onAlaram = (price) => {
 
 var onList = () => {
 
-	var send_msg = "< Alarmed price List >\n";
+	var send_msg = "< Alarmed price list >\n";
 
 	if(alarm_list.length == 0)  {
 		send_msg += "No alarms are registered.";
