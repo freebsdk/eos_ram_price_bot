@@ -70,8 +70,8 @@ var onPrice = () => {
 		sendMsg("Not yet received ram price data.");
 	}
 	else {
-		var elapsed_sec = Math.floor((cur_utc-last_update_utc)/1000);
-		sendMsg("Current ram price is "+cur_ram_price+" ("+elapsed_sec+" secs before)");
+		var dt = new Date(last_update_utc);
+		sendMsg("Current ram price is "+cur_ram_price+" ("+dt.getHours()+":"+dt.getMinutes()+":"+dt.getSeconds());
 	}
 }
 
