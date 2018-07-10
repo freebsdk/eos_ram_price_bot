@@ -69,7 +69,7 @@ var onPrice = () => {
 		sendMsg("Not yet received ram price data.");
 	}
 	else {
-		sendMsg("Current ram price is "+cur_ram_price+" ("+cur_utc-last_update_utc+" sec before)");
+		sendMsg("Current ram price is "+cur_ram_price+" ("+(cur_utc-last_update_utc)+" sec before)");
 	}
 }
 
