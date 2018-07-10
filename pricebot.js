@@ -162,7 +162,7 @@ var initTelegram = (telegram_token) => {
 var getCurPrice = () => {
 
     var c_ut = new Date().getTime();
-    var s_ut = c_ut - (60 * 1000);
+    var s_ut = c_ut - (5*60 * 1000);
     var e_ut = c_ut;
 
     var requestOption = {
@@ -173,13 +173,18 @@ var getCurPrice = () => {
             start: s_ut,
             end: e_ut,
             callback: ""
-        },
+		},
+		headers: {
+			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
+			'Referer': 'https://eos.feexplorer.io/',
+			'Host' : 'eos.feexplorer.io',
+			'Cookie' : '__cfduid=dbe353522565b8757353ad64d7ce5e4c01530546695; _ga=GA1.2.1335495326.1530546702; PHPSESSID=hn09a69v4hbkkdds3pmsqvdioa; _gid=GA1.2.1718015334.1531203633; _pk_ses.3.3979=*; _pk_id.3.3979=13a21d7980e4de71.1530546703.6.1531233419.1531231274.'	
+		},
         forever: true,
         agent: false
     };
 
     request.get(requestOption, (err, res, body) => {
-		console.log("err:"+err+" | body:"+body);
         if (err != null) { console.error(err); return; }
 
         try {
@@ -255,7 +260,7 @@ var main = async() => {
     setInterval(()=>{
         getCurPrice();
 		checkPrice();
-    }, 3000);
+    }, 5000);
 }
 
 
