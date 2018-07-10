@@ -162,13 +162,13 @@ var initTelegram = (telegram_token) => {
 var getCurPrice = () => {
 
     var c_ut = new Date().getTime();
-    var s_ut = c_ut - (30 * 1000);
+    var s_ut = c_ut - (60 * 1000);
     var e_ut = c_ut;
 
     var requestOption = {
         method: 'GET',
         timeout: 60 * 1000,
-        url: 'https://eos.feexplorer.io/json/EOSramPrice.php',
+        url: 'https://eos.feexplorer.io/json/EOSramPrice2.php',
         qs: {
             start: s_ut,
             end: e_ut,
@@ -179,17 +179,19 @@ var getCurPrice = () => {
     };
 
     request.get(requestOption, (err, res, body) => {
+		console.log("err:"+err+" | body:"+body);
         if (err != null) { console.error(err); return; }
 
         try {
             var last_price_list = JSON.parse(body.substring(1, body.length-1));
         }
         catch(ex) {
+			console.log("error : "+ex.message+":"+body);
             return;
         }
 
 		cur_ram_price = Number(last_price_list[last_price_list.length-1][1]);
-		//console.log(cur_ram_price);
+		console.log(cur_ram_price);
     });
 }
 
