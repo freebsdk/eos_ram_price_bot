@@ -50,7 +50,8 @@ var checkPrice = () => {
         if(a_price == check_price) {
             alarm_list.splice(i,1);
             sendMsg('The price has been reached. (target price:'+a_price+")");
-            break;
+			saveAlarmList();
+			break;
         }
     }
 }
