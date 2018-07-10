@@ -40,7 +40,7 @@ var checkPrice = () => {
 	if(cur_ram_price == 0.0) return;
 
     var check_price = (Math.floor(cur_ram_price * 10))/10;
-    console.log("check_price : "+check_price);
+    //console.log("check_price : "+check_price);
 
     //check alarm prices
     for(var i=0; i<alarm_list.length; i++) {
@@ -62,7 +62,7 @@ var checkPrice = () => {
 
 var onPrice = () => {
 	if(cur_ram_price == 0)  {
-		sendMsg("Not yet received price data.");
+		sendMsg("Not yet received ram price data.");
 	}
 	else {
 		sendMsg("Current ram price is "+cur_ram_price);
