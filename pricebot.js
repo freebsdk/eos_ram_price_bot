@@ -171,24 +171,22 @@ var initTelegram = (telegram_token) => {
 
 var getCurPrice = () => {
 
-    var c_ut = new Date().getTime();
-    var s_ut = c_ut - (5*60 * 1000);
-    var e_ut = c_ut;
+    var c_ut = Math.floor(new Date().getTime()/1000);
 
     var requestOption = {
         method: 'GET',
         timeout: 60 * 1000,
-        url: 'https://eos.feexplorer.io/json/EOSramPrice2.php',
+        url: 'https://eos.feexplorer.io/json/EOSramPrice.php',
         qs: {
-            start: s_ut,
-            end: e_ut,
-            callback: ""
+			toTs:c_ut,
+			limit:1,
+			res:1
 		},
 		headers: {
 			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
 			'Referer': 'https://eos.feexplorer.io/',
 			'Host' : 'eos.feexplorer.io',
-			'Cookie' : '__cfduid=dbe353522565b8757353ad64d7ce5e4c01530546695; _ga=GA1.2.1335495326.1530546702; PHPSESSID=hn09a69v4hbkkdds3pmsqvdioa; _gid=GA1.2.1718015334.1531203633; _pk_ses.3.3979=*; _pk_id.3.3979=13a21d7980e4de71.1530546703.6.1531233419.1531231274.'	
+			'Cookie' : '__cfduid=d8c1c1b5a97099b0837cd4bcfd2cac7d11530548864; _ga=GA1.2.395792779.1530548869; PHPSESSID=qnd3odirvsrfbpnbkobhn17mvf; _pk_ref.3.3979=%5B%22%22%2C%22%22%2C1532245214%2C%22https%3A%2F%2Fwww.reddit.com%2Fr%2Feos%2Fcomments%2F8s987w%2Feos_ram_trading_tool%2F%22%5D; _pk_ses.3.3979=*; _gid=GA1.2.1088275796.1532245215; _pk_id.3.3979=07a86d959b982f52.1530548870.23.1532245341.1532245214.; _gat_gtag_UA_115609820_2=1; io=vFxFGdsunt8kQ8UFBOcc'
 		},
         forever: true,
         agent: false
@@ -198,6 +196,7 @@ var getCurPrice = () => {
         if (err != null) { console.error(err); return; }
 
         try {
+			console.log(body);
             var last_price_list = JSON.parse(body.substring(1, body.length-1));
         }
         catch(ex) {
@@ -207,7 +206,7 @@ var getCurPrice = () => {
 
 		cur_ram_price = Number(last_price_list[last_price_list.length-1][1]);
 		last_update_utc = new Date().getTime();
-		//console.log(cur_ram_price);
+		console.log(cur_ram_price);
     });
 }
 
