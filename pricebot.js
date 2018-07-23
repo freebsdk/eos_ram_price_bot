@@ -5,10 +5,9 @@ const TelegramBot = require('node-telegram-bot-api');
 
 
 var bot = null;
-var cur_ram_price = 0.0;
-var last_update_utc = 0;
 var chat_id = 0;
 var alarm_list = [];
+var recent_ram_info = null;
 var SAVE_FILE_NAME = "./alarm_list.txt";
 
 
@@ -39,9 +38,9 @@ var sendMsg = (msg) => {
 
 var checkPrice = () => {
 
-	if(cur_ram_price == 0.0) return;
+	if(recent_ram_info == null) return;
 
-    var check_price = (Math.floor(cur_ram_price * 100))/100;
+    var check_price = (Math.floor(recent_ram_info.price * 100))/100;
     //console.log("check_price : "+check_price);
 
     //check alarm prices
@@ -66,13 +65,13 @@ var checkPrice = () => {
 var onPrice = () => {
 	var cur_utc = new Date().getTime();
 
-	if(cur_ram_price == 0)  {
+	if(recent_ram_info == null)  {
 		sendMsg("Not yet received ram price data.");
+		return;
 	}
-	else {
-		var dt = new Date(last_update_utc);
-		sendMsg("Current ram price is "+cur_ram_price+" (updated on "+dt.getMinutes()+":"+dt.getSeconds()+")");
-	}
+
+	var dt = new Date(recent_ram_info.update_utc);
+	sendMsg("Current ram price is "+recent_ram_info.price+" EOS/KB (updated on "+dt.getMinutes()+"m:"+dt.getSeconds()+"s)");
 }
 
 
@@ -101,19 +100,18 @@ var onAlaram = (price) => {
 
 
 var onList = () => {
-
 	var send_msg = "< Alarmed price list >\n";
 
 	if(alarm_list.length == 0)  {
-		send_msg += "No alarms are registered.";
-	}
-	else {
-		alarm_list.sort();
-		for(var i=0; i<alarm_list.length; i++) {
-			send_msg += "["+i+"] "+alarm_list[i]+"\n";
-		}	
+		sendMsg("No alarms are registered.");
+		return;
 	}
 
+	alarm_list.sort();
+	for(var i=0; i<alarm_list.length; i++) {
+		send_msg += "["+i+"] "+alarm_list[i]+"\n";
+	}
+	
 	sendMsg(send_msg);
 }
 
@@ -140,6 +138,25 @@ var onRemove = (t_price) => {
 
 
 
+var onInfo = () => {
+	if(recent_ram_info == null) {
+		sendMsg("[!] Recent ram info is not cached yet."); 
+		return;
+	}
+	
+	var ratio = recent_ram_info.os / (64*1024*1024);
+	ratio = 100 - (Math.floor(ratio * 100 * 100) / 100);
+
+	var msg = "< Recent ram info >\n[1] RAM balance :\n"+recent_ram_info.os+" KB (occupied "+ratio+"%)\n"+
+		"[2] Outstanding balance :\n"+recent_ram_info.cb+" EOS";
+	sendMsg(msg);
+}
+
+
+
+
+
+
 
 var initTelegram = (telegram_token) => {
 	bot = new TelegramBot(telegram_token, {polling: true});	
@@ -157,11 +174,12 @@ var initTelegram = (telegram_token) => {
 			case "list"   : onList(); break;
 			case "rm"     : 
 			case "remove" : onRemove(token[1]); break;
+			case "in"	  :
+			case "info"	  : onInfo(); break;
         	default : sendMsg('Invalid command.'); break;
     	}
 	});
 }
-
 
 
 
@@ -174,39 +192,41 @@ var getCurPrice = () => {
     var c_ut = Math.floor(new Date().getTime()/1000);
 
     var requestOption = {
-        method: 'GET',
+        method: 'POST',
         timeout: 60 * 1000,
-        url: 'https://eos.feexplorer.io/json/EOSramPrice.php',
-        qs: {
-			toTs:c_ut,
-			limit:1,
-			res:1
-		},
+       	url: 'https://api.eosnewyork.io/v1/chain/get_table_rows',
 		headers: {
 			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
 			'Referer': 'https://eos.feexplorer.io/',
-			'Host' : 'eos.feexplorer.io',
-			'Cookie' : '__cfduid=d8c1c1b5a97099b0837cd4bcfd2cac7d11530548864; _ga=GA1.2.395792779.1530548869; PHPSESSID=qnd3odirvsrfbpnbkobhn17mvf; _pk_ref.3.3979=%5B%22%22%2C%22%22%2C1532245214%2C%22https%3A%2F%2Fwww.reddit.com%2Fr%2Feos%2Fcomments%2F8s987w%2Feos_ram_trading_tool%2F%22%5D; _pk_ses.3.3979=*; _gid=GA1.2.1088275796.1532245215; _pk_id.3.3979=07a86d959b982f52.1530548870.23.1532245341.1532245214.; _gat_gtag_UA_115609820_2=1; io=vFxFGdsunt8kQ8UFBOcc'
+			'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
 		},
+		body : '{"json":"true", "code":"eosio", "scope":"eosio", "table":"rammarket", "limit":"10"}',
         forever: true,
         agent: false
     };
 
-    request.get(requestOption, (err, res, body) => {
+    request.post(requestOption, (err, res, body) => {
         if (err != null) { console.error(err); return; }
 
         try {
-			console.log(body);
-            var last_price_list = JSON.parse(body.substring(1, body.length-1));
+			//console.log(body);
+            var res_obj = JSON.parse(body).rows[0];
         }
         catch(ex) {
 			console.error("error : "+ex.message+":"+body);
+			recent_ram_info = null;
             return;
         }
 
-		cur_ram_price = Number(last_price_list[last_price_list.length-1][1]);
-		last_update_utc = new Date().getTime();
-		console.log(cur_ram_price);
+		recent_ram_info = {};
+
+        const CW = 1;
+		recent_ram_info.cb = Number(res_obj.quote.balance.split(" ")[0]); //connector balance
+		recent_ram_info.os = Math.floor(Number(res_obj.base.balance.split(" ")[0])/1024); //byte to kbyte
+		recent_ram_info.price = recent_ram_info.cb / (recent_ram_info.os * CW);
+		recent_ram_info.update_utc = new Date().getTime();
+
+		//console.log(recent_ram_info.price);
     });
 }
 
