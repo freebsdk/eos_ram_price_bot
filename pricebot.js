@@ -162,7 +162,7 @@ var onList = () => {
 
 var onRemove = (t_price) => {
 	for(var i=0; i<l_alarm.length; i++) {
-		if(l_alarm[i] == t_price) {
+		if(l_alarm[i].f_price == t_price) {
 			l_alarm.splice(i,1);
 			sendMsg("The alarm has been removed. : (count:"+l_alarm.length+")");
 			return;
@@ -213,7 +213,7 @@ var initTelegram = (telegram_token) => {
 			case "remove" : onRemove(token[1]); break;
 			case "in"	  :
 			case "info"	  : onInfo(); break;
-        	default : sendMsg('Invalid command.'); break;
+        	default : sendMsg('Error : Invalid command.'); break;
     	}
 	});
 }
@@ -279,7 +279,7 @@ var saveAlarmList = () => {
 
 		fs.writeFile(SAVE_FILE_NAME, data, 'utf8', (err) => {
 			if(err != null) { console.error(err); reject(err); return; }
-			console.log("alarm list file saved. : (count:"+l_alarm.length+")");
+			console.log("Alarm list is saved. : (count:"+l_alarm.length+")");
 			resolve(null);
 		});
 	});
@@ -299,7 +299,7 @@ var loadAlarmList = () => {
 		fs.readFile(SAVE_FILE_NAME, 'utf8', (err, data) => {
 			if(err != null) { console.error(err); reject(err); return; }
 			l_alarm = JSON.parse(data);	
-			console.log("Alarm list file loaded. : (count:"+l_alarm.length+")");
+			console.log("Alarm list is loaded. : (count:"+l_alarm.length+")");
 			resolve();
 		});
 	});
@@ -329,7 +329,7 @@ var main = async() => {
     setInterval(()=>{
         getCurPrice();
 		checkPrice();
-    }, 5000);
+    }, 3000);
 }
 
 
