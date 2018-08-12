@@ -22,6 +22,9 @@ var isNumber = (n) => {
 
 
 
+var curFloatDigit = (f_value, i_max_float_digit) => {
+	return Math.floor(f_value*Math.pow(10,i_max_float_digit))/Math.pow(10,i_max_float_digit);
+}
 
 
 
@@ -40,17 +43,17 @@ var checkPrice = () => {
 
 	if(recent_ram_info == null) return;
 
-    var check_price = (Math.floor(recent_ram_info.price * 100))/100;
+    var check_price = curFloatDigit(recent_ram_info.price, 2);
     //console.log("check_price : "+check_price);
 
     //check alarm prices
     for(var i=0; i<l_alarm.length; i++) {
 		var o_alarm = l_alarm[i];
 		
-		if( (o_alarm.s_method == "buy"  && o_alarm.i_price >= check_price) ||
-			(o_alarm.s_method == "sell" && o_alarm.i_price <= check_price) ) {
+		if( (o_alarm.s_method == "buy"  && o_alarm.f_price >= check_price) ||
+			(o_alarm.s_method == "sell" && o_alarm.f_price <= check_price) ) {
            	l_alarm.splice(i,1);
-           	sendMsg('The price has been reached. (target price:'+o_alarm.i_price+" "+o_alarm.s_method+")");
+           	sendMsg('The price has been reached. (target price:'+o_alarm.f_price+" "+o_alarm.s_method+")");
 			saveAlarmList();
 			break;
         }
@@ -65,20 +68,20 @@ var checkPrice = () => {
 
 
 var onPrice = () => {
-	var cur_utc = new Date().getTime();
-
 	if(recent_ram_info == null)  {
 		sendMsg("Not yet received ram price data.");
 		return;
 	}
 
-	var dt = new Date(recent_ram_info.update_utc);
-	sendMsg("Current ram price is "+recent_ram_info.price+" EOS/KB (updated on "+dt.getMinutes()+"m:"+dt.getSeconds()+"s)");
+	var o_dt = new Date(recent_ram_info.update_utc);
+	var f_mod_price = curFloatDigit(recent_ram_info.price, 4);
+
+	sendMsg("Current ram price is "+f_mod_price+" EOS/KB (updated on "+o_dt.getHours()+":"+o_dt.getMinutes()+")");
 }
 
 
 
-var isNull = (x) => {
+var isNotSet = (x) => {
 	if(typeof x == 'undefined') return true;
 	if(x == null) return true;
 	
@@ -92,15 +95,15 @@ var isNull = (x) => {
 var onAlaram = (token) => {
 
 	var s_usage = "usage> alarm [price] [buy | b | sell | s]";
-	var i_price = Number(token[1]);
+	var f_price = Number(token[1]);
 	var s_method = token[2];	//buy, b, sell, s
 
-	if(isNull(s_method) == true || s_method != "buy" && s_method != "b" && s_method != "sell" && s_method != "s") {
+	if(isNotSet(s_method) == true || (s_method != "buy" && s_method != "b" && s_method != "sell" && s_method != "s")) {
 		sendMsg("Error : Invalid method value.\n"+s_usage);
 		return;
 	}
 
-	if(isNumber(i_price) == false) {
+	if(isNumber(f_price) == false) {
 		sendMsg("Error : Invalid price value.\n"+s_usage);
 		return;
 	}
@@ -108,12 +111,12 @@ var onAlaram = (token) => {
 	var o_alarm = {};
 	if(s_method == "buy" || s_method == "b") o_alarm.s_method = "buy";
 	else o_alarm.s_method = "sell";
-	o_alarm.i_price = i_price;
+	o_alarm.f_price = f_price;
 	
 	//duplicate price checking
 	for(var i=0; i<l_alarm.length; i++) {
-		var o_alarm = l_alarm[i];
-		if(o_alarm.i_price == i_price) {
+		var o_temp = l_alarm[i];
+		if(o_temp.f_price == f_price) {
 			sendMsg("Error : Already registered price.");
 			return;
 		}
@@ -122,7 +125,7 @@ var onAlaram = (token) => {
 	l_alarm.push(o_alarm);
 	saveAlarmList();
 
-	sendMsg("New alarm has been added. (at "+i_price+" / count:"+l_alarm.length+")");
+	sendMsg("New alarm has been added. (at "+f_price+" / count:"+l_alarm.length+")");
 }
 
 
@@ -140,12 +143,12 @@ var onList = () => {
 	}
 
 	l_alarm.sort((l,r) => {
-		return r.i_price - l.i_price;
+		return r.f_price - l.f_price;
 	});
 
 	for(var i=0; i<l_alarm.length; i++) {
 		var o_alarm = l_alarm[i];
-		send_msg += "["+i+"] "+o_alarm.i_price+" "+o_alarm.s_method+"\n";
+		send_msg += "["+i+"] "+o_alarm.f_price+" "+o_alarm.s_method+"\n";
 	}
 	
 	sendMsg(send_msg);
@@ -180,11 +183,9 @@ var onInfo = () => {
 		return;
 	}
 	
-	var ratio = recent_ram_info.os / (64*1024*1024);
-	ratio = 100 - (Math.floor(ratio * 100 * 100) / 100);
-
-	var msg = "< Recent ram info >\n[1] RAM balance :\n"+recent_ram_info.os+" KB (occupied "+ratio+"%)\n"+
+	var msg = "< Recent ram info >\n[1] RAM balance :\n"+recent_ram_info.os+" KB\n"+
 		"[2] Outstanding balance :\n"+recent_ram_info.cb+" EOS";
+
 	sendMsg(msg);
 }
 
@@ -328,7 +329,7 @@ var main = async() => {
     setInterval(()=>{
         getCurPrice();
 		checkPrice();
-    }, 3000);
+    }, 5000);
 }
 
 
