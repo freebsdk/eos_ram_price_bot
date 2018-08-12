@@ -47,8 +47,8 @@ var checkPrice = () => {
     for(var i=0; i<l_alarm.length; i++) {
 		var o_alarm = l_alarm[i];
 		
-		if( (o_alarm.s_method == "buy"  && o_alarm.i_price <= check_price) ||
-			(o_alarm.s_method == "sell" && o_alarm.i_price >= check_price) ) {
+		if( (o_alarm.s_method == "buy"  && o_alarm.i_price >= check_price) ||
+			(o_alarm.s_method == "sell" && o_alarm.i_price <= check_price) ) {
            	l_alarm.splice(i,1);
            	sendMsg('The price has been reached. (target price:'+o_alarm.i_price+" "+o_alarm.s_method+")");
 			saveAlarmList();
