@@ -1,4 +1,4 @@
-const console_stamp = require('console-stamp')(console, 'yyyy-mm-dd HH:MM:ss.l');
+require('console-stamp')(console, 'yyyy-mm-dd HH:MM:ss.l');
 const request = require('request');
 const fs = require('fs');
 const TelegramBot = require('node-telegram-bot-api');
@@ -6,7 +6,7 @@ const TelegramBot = require('node-telegram-bot-api');
 
 var bot = null;
 var chat_id = 0;
-var alarm_list = [];
+var l_alarm = [];
 var recent_ram_info = null;
 var SAVE_FILE_NAME = "./alarm_list.txt";
 
@@ -44,11 +44,13 @@ var checkPrice = () => {
     //console.log("check_price : "+check_price);
 
     //check alarm prices
-    for(var i=0; i<alarm_list.length; i++) {
-        var a_price = alarm_list[i];
-        if(a_price == check_price) {
-            alarm_list.splice(i,1);
-            sendMsg('The price has been reached. (target price:'+a_price+")");
+    for(var i=0; i<l_alarm.length; i++) {
+		var o_alarm = l_alarm[i];
+		
+		if( (o_alarm.s_method == "buy"  && o_alarm.i_price <= check_price) ||
+			(o_alarm.s_method == "sell" && o_alarm.i_price >= check_price) ) {
+           	l_alarm.splice(i,1);
+           	sendMsg('The price has been reached. (target price:'+o_alarm.i_price+" "+o_alarm.s_method+")");
 			saveAlarmList();
 			break;
         }
@@ -76,21 +78,51 @@ var onPrice = () => {
 
 
 
+var isNull = (x) => {
+	if(typeof x == 'undefined') return true;
+	if(x == null) return true;
+	
+	return false;
+}
 
 
 
 
-var onAlaram = (price) => {
 
-	if(isNumber(price) == false) {
-		sendMsg("Invalid price value.");
+var onAlaram = (token) => {
+
+	var s_usage = "usage> alarm [price] [buy | b | sell | s]";
+	var i_price = Number(token[1]);
+	var s_method = token[2];	//buy, b, sell, s
+
+	if(isNull(s_method) == true || s_method != "buy" && s_method != "b" && s_method != "sell" && s_method != "s") {
+		sendMsg("Error : Invalid method value.\n"+s_usage);
 		return;
 	}
 
-	alarm_list.push(Number(price));
+	if(isNumber(i_price) == false) {
+		sendMsg("Error : Invalid price value.\n"+s_usage);
+		return;
+	}
+
+	var o_alarm = {};
+	if(s_method == "buy" || s_method == "b") o_alarm.s_method = "buy";
+	else o_alarm.s_method = "sell";
+	o_alarm.i_price = i_price;
+	
+	//duplicate price checking
+	for(var i=0; i<l_alarm.length; i++) {
+		var o_alarm = l_alarm[i];
+		if(o_alarm.i_price == i_price) {
+			sendMsg("Error : Already registered price.");
+			return;
+		}
+	}
+
+	l_alarm.push(o_alarm);
 	saveAlarmList();
 
-	sendMsg("New alarm has been added. (at "+price+" / count:"+alarm_list.length+")");
+	sendMsg("New alarm has been added. (at "+i_price+" / count:"+l_alarm.length+")");
 }
 
 
@@ -100,16 +132,20 @@ var onAlaram = (price) => {
 
 
 var onList = () => {
-	var send_msg = "< Alarmed price list >\n";
+	var send_msg = "< Alarm price list >\n";
 
-	if(alarm_list.length == 0)  {
+	if(l_alarm.length == 0)  {
 		sendMsg("No alarms are registered.");
 		return;
 	}
 
-	alarm_list.sort();
-	for(var i=0; i<alarm_list.length; i++) {
-		send_msg += "["+i+"] "+alarm_list[i]+"\n";
+	l_alarm.sort((l,r) => {
+		return r.i_price - l.i_price;
+	});
+
+	for(var i=0; i<l_alarm.length; i++) {
+		var o_alarm = l_alarm[i];
+		send_msg += "["+i+"] "+o_alarm.i_price+" "+o_alarm.s_method+"\n";
 	}
 	
 	sendMsg(send_msg);
@@ -122,15 +158,15 @@ var onList = () => {
 
 
 var onRemove = (t_price) => {
-	for(var i=0; i<alarm_list.length; i++) {
-		if(alarm_list[i] == t_price) {
-			alarm_list.splice(i,1);
-			sendMsg("The alarm has been removed. : (count:"+alarm_list.length+")");
+	for(var i=0; i<l_alarm.length; i++) {
+		if(l_alarm[i] == t_price) {
+			l_alarm.splice(i,1);
+			sendMsg("The alarm has been removed. : (count:"+l_alarm.length+")");
 			return;
 		}
 	}
 
-	sendMsg("The alarm is not exist.");
+	sendMsg("Error : The alarm is not exist.");
 }
 
 
@@ -140,7 +176,7 @@ var onRemove = (t_price) => {
 
 var onInfo = () => {
 	if(recent_ram_info == null) {
-		sendMsg("[!] Recent ram info is not cached yet."); 
+		sendMsg("Recent ram info is not cached yet."); 
 		return;
 	}
 	
@@ -169,7 +205,7 @@ var initTelegram = (telegram_token) => {
 			case "pr": 
         	case "price"  : onPrice(); break;
 			case "al"     : 
-			case "alarm"  : onAlaram(token[1]); break;
+			case "alarm"  : onAlaram(token); break;
 			case "ls"     :
 			case "list"   : onList(); break;
 			case "rm"     : 
@@ -238,11 +274,11 @@ var getCurPrice = () => {
 
 var saveAlarmList = () => {
 	return new Promise((resolve, reject) => {
-		var data = JSON.stringify(alarm_list);
+		var data = JSON.stringify(l_alarm);
 
 		fs.writeFile(SAVE_FILE_NAME, data, 'utf8', (err) => {
 			if(err != null) { console.error(err); reject(err); return; }
-			console.log("alarm list file saved. : (count:"+alarm_list.length+")");
+			console.log("alarm list file saved. : (count:"+l_alarm.length+")");
 			resolve(null);
 		});
 	});
@@ -261,8 +297,8 @@ var loadAlarmList = () => {
 		if(fs.existsSync(SAVE_FILE_NAME) == false) { resolve(); return; }
 		fs.readFile(SAVE_FILE_NAME, 'utf8', (err, data) => {
 			if(err != null) { console.error(err); reject(err); return; }
-			alarm_list = JSON.parse(data);	
-			console.log("alarm list file loaded. : (count:"+alarm_list.length+")");
+			l_alarm = JSON.parse(data);	
+			console.log("Alarm list file loaded. : (count:"+l_alarm.length+")");
 			resolve();
 		});
 	});
@@ -287,10 +323,12 @@ var main = async() => {
 	await loadAlarmList();	
 	initTelegram(args[0]);
 
+	//load the price at first.
+	getCurPrice();
     setInterval(()=>{
         getCurPrice();
 		checkPrice();
-    }, 5000);
+    }, 3000);
 }
 
 
